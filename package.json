@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@google-cloud/bigquery": "^6.2.0",
+    "ua-parser-js": "^1.0.35"
+  }
+}
