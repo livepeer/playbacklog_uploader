@@ -37,8 +37,8 @@ jobs:
         with:
           artifacts-dir: releases
           release-name: ${{ github.event.workflow_run.head_branch }}
-          # gpg-key: ${{ secrets.CI_GPG_SIGNING_KEY }}
-          # gpg-key-passphrase: ${{ secrets.CI_GPG_SIGNING_PASSPHRASE }}
+          gpg-key: ${{ secrets.CI_GPG_SIGNING_KEY }}
+          gpg-key-passphrase: ${{ secrets.CI_GPG_SIGNING_PASSPHRASE }}
 
       - name: Release to github
         uses: softprops/action-gh-release@v1
