@@ -28,4 +28,4 @@ jobs:
         with:
           generate_release_notes: true
           tag_name: ${{ github.event.workflow_run.head_branch }}
-          files: mistbigqueryuploader
+          files: mistbigqueryuploader/mistbigqueryuploader
