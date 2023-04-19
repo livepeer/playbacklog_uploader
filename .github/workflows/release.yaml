@@ -22,20 +22,10 @@ jobs:
         with:
           workflow: build.yaml
           name: release-artifacts
-          path: releases/
-
-      - name: Generate sha256 checksum and gpg signatures for release artifacts
-        uses: livepeer/action-gh-checksum-and-gpg-sign@latest
-        with:
-          artifacts-dir: releases
-          release-name: ${{ github.event.workflow_run.head_branch }}
-          gpg-key: ${{ secrets.CI_GPG_SIGNING_KEY }}
-          gpg-key-passphrase: ${{ secrets.CI_GPG_SIGNING_PASSPHRASE }}
-
+          path: mistbigqueryuploader
       - name: Release to github
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
           tag_name: ${{ github.event.workflow_run.head_branch }}
-          files: |
-            releases/*
+          files: mistbigqueryuploader
