@@ -17,15 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.workflow_run.head_branch }}
-
-      - uses: actions-ecosystem/action-regex-match@v2
-        id: match-tag
-        with:
-          text: ${{ github.event.workflow_run.head_branch }}
-          regex: '^v([0-9]+\.\d+\.\d+)$'
-
       - name: Download artifacts from build stage
-        if: ${{ steps.match-tag.outputs.match != '' }}
         uses: dawidd6/action-download-artifact@v2
         with:
           workflow: build.yaml
@@ -33,7 +25,6 @@ jobs:
           path: releases/
 
       - name: Generate sha256 checksum and gpg signatures for release artifacts
-        if: ${{ steps.match-tag.outputs.match != '' }}
         uses: livepeer/action-gh-checksum-and-gpg-sign@latest
         with:
           artifacts-dir: releases
@@ -43,7 +34,6 @@ jobs:
 
       - name: Release to github
         uses: softprops/action-gh-release@v1
-        if: ${{ steps.match-tag.outputs.match != '' }}
         with:
           generate_release_notes: true
           tag_name: ${{ github.event.workflow_run.head_branch }}
