@@ -1,0 +1,39 @@
+name: Build binaries
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "master"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build binaries for all platforms
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Use latest Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'npm'
+      - name: Download dependencies
+        run: npm install
+      - name: Build
+        run: npx pkg mistbigqueryuploader.js -t node16-linux-x64
+      - name: Upload artifacts for processing further in linux
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-artifacts
+          path: releases/
+
