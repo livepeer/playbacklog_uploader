@@ -40,7 +40,7 @@ jobs:
       - name: Rename and move built binary
         run: |
           mv mistbigqueryuploader livepeer-mist-bigquery-uploader
-          mkdir releases/
+          mkdir -p releases/
           tar -czvf "releases/livepeer-mist-bigquery-uploader-linux-amd64.tar.gz" ./livepeer-mist-bigquery-uploader
 
       - name: Upload artifacts for processing further in linux
