@@ -19,11 +19,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # exclude:
+        #   - platform:
+        #       name: darwin
+        #     arch:
+        #       name: arm64
         platform:
           - name: linux
             os: ubuntu-latest
           - name: darwin
-            os: macos-latest
+            # building darwin-arm64 fails on macos :|
+            os: ubuntu-latest
           - name: windows
             os: ubuntu-latest
         arch:
@@ -53,6 +59,59 @@ jobs:
           mkdir -p bin/
           npx pkg mistbigqueryuploader.js --targets "node16-${{ matrix.platform.name }}-${{ matrix.arch.suffix }}" --output bin/livepeer-mist-bigquery-uploader
 
+      - name: Upload macos binaries for codesigning (${{ matrix.arch.name }})
+        if: ${{ matrix.platform.name == 'darwin' }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-${{ matrix.arch.name }}
+          path: bin/livepeer-mist-bigquery-uploader
+
+      - name: Rename and move built binary (windows)
+        if: ${{ matrix.platform.name == 'windows' }}
+        run: |
+          mv bin/livepeer-mist-bigquery-uploader.exe ./livepeer-mist-bigquery-uploader.exe
+          mkdir -p releases/
+          zip -q9 "releases/livepeer-mist-bigquery-uploader-${{ matrix.platform.name }}-${{ matrix.arch.name }}.zip" ./livepeer-mist-bigquery-uploader.exe
+
+      - name: Rename and move built binary (linux)
+        if: ${{ matrix.platform.name == 'linux' }}
+        run: |
+          mv bin/livepeer-mist-bigquery-uploader ./livepeer-mist-bigquery-uploader
+          mkdir -p releases/
+          tar -czvf "releases/livepeer-mist-bigquery-uploader-${{ matrix.platform.name }}-${{ matrix.arch.name }}.tar.gz" ./livepeer-mist-bigquery-uploader
+
+      - name: Upload artifacts for processing further in linux
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-artifacts
+          path: releases/
+
+  macos:
+    strategy:
+      fail-fast: true
+      matrix:
+        arch:
+          - amd64
+          - arm64
+    name: Codesign and archive macOS binaries
+    runs-on: macos-latest
+    needs: build
+    steps:
+      - name: Setup env
+        run: |
+          echo ARCH="${{ matrix.arch }}" >> "$GITHUB_ENV"
+
+      - name: Download binaries from build stage
+        uses: actions/download-artifact@v3
+        with:
+          name: macos-${{ matrix.arch }}
+          path: bin/
+
+      - name: Fix file permissions
+        run: |
+          cd bin/
+          chmod a+x livepeer-*
+
       - uses: actions-ecosystem/action-regex-match@v2
         id: match-tag
         with:
@@ -60,7 +119,7 @@ jobs:
           regex: '^(master|main|v[0-9]+\.\d+\.\d+)$'
 
       - name: Codesign and notarize binaries
-        if: ${{ matrix.platform.name == 'darwin' && steps.match-tag.outputs.match != '' }}
+        if: ${{ steps.match-tag.outputs.match != '' }}
         uses: livepeer/action-gh-codesign-apple@latest
         with:
           developer-certificate-id: ${{ secrets.CI_MACOS_CERTIFICATE_ID }}
@@ -71,19 +130,11 @@ jobs:
           binary-path: "bin/"
           app-bundle-id: "org.livepeer.playbackUploader"
 
-      - name: Rename and move built binary
-        if: ${{ matrix.platform.name == 'windows' }}
-        run: |
-          mv bin/livepeer-mist-bigquery-uploader.exe ./livepeer-mist-bigquery-uploader.exe
-          mkdir -p releases/
-          zip -q9 "releases/livepeer-mist-bigquery-uploader-${{ matrix.platform.name }}-${{ matrix.arch.name }}.zip" ./livepeer-mist-bigquery-uploader.exe
-
-      - name: Rename and move built binary
-        if: ${{ matrix.platform.name != 'windows' }}
+      - name: Rename and move built binary (darwin)
         run: |
           mv bin/livepeer-mist-bigquery-uploader ./livepeer-mist-bigquery-uploader
           mkdir -p releases/
-          tar -czvf "releases/livepeer-mist-bigquery-uploader-${{ matrix.platform.name }}-${{ matrix.arch.name }}.tar.gz" ./livepeer-mist-bigquery-uploader
+          tar -czvf "releases/livepeer-mist-bigquery-uploader-darwin-${{ matrix.arch }}.tar.gz" ./livepeer-mist-bigquery-uploader
 
       - name: Upload artifacts for processing further in linux
         uses: actions/upload-artifact@v3
