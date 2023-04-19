@@ -15,9 +15,19 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Build binaries for all platforms
+    name: Build binaries for ${{ matrix.platform }}-${{ matrix.arch.name }}
     strategy:
       fail-fast: false
+      matrix:
+        platform:
+          - linux
+          - darwin
+        arch:
+          - suffix: arm64
+            name: arm64
+          - suffix: x64
+            name: amd64
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -35,13 +45,13 @@ jobs:
         run: npm install
 
       - name: Build binary using `pkg`
-        run: npx pkg mistbigqueryuploader.js --targets node16-linux-x64
+        run: npx pkg mistbigqueryuploader.js --targets "node16-${{ matrix.platform }}-${{ matrix.arch.suffix }}"
 
       - name: Rename and move built binary
         run: |
           mv mistbigqueryuploader livepeer-mist-bigquery-uploader
           mkdir -p releases/
-          tar -czvf "releases/livepeer-mist-bigquery-uploader-linux-amd64.tar.gz" ./livepeer-mist-bigquery-uploader
+          tar -czvf "releases/livepeer-mist-bigquery-uploader-${{ matrix.platform }}-${{ matrix.arch.name }}.tar.gz" ./livepeer-mist-bigquery-uploader
 
       - name: Upload artifacts for processing further in linux
         uses: actions/upload-artifact@v3
