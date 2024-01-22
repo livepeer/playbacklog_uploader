@@ -127,8 +127,8 @@ jobs:
           developer-certificate-password: ${{ secrets.CI_MACOS_CERTIFICATE_PASSWORD }}
           app-notarization-email: ${{ secrets.CI_MACOS_NOTARIZATION_USER }}
           app-notarization-password: ${{ secrets.CI_MACOS_NOTARIZATION_PASSWORD }}
+          app-notarization-team-id: ${{ secrets.CI_MACOS_NOTARIZATION_TEAM_ID }}
           binary-path: "bin/"
-          app-bundle-id: "org.livepeer.playbackUploader"
 
       - name: Rename and move built binary (darwin)
         run: |
