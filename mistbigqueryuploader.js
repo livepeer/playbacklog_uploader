@@ -114,18 +114,16 @@ s.on("message", (msg, rinfo) => {
       device: ua.device,
     };
   }
+  const row = {
+    log: JSON.stringify(json),
+    id: crypto.randomUUID(),
+    timestamp: date.getTime(),
+    timestamp_ts: bq.timestamp(date),
+  };
   for (const tableName of process.env.TABLE.split(",")) {
     bq.dataset(process.env.DATASET)
       .table(tableName)
-      .insert(
-        {
-          log: JSON.stringify(json),
-          id: crypto.randomUUID(),
-          timestamp: date.getTime(),
-          timestamp_ts: bq.timestamp(date),
-        },
-        { ignoreUnknownValues: true }
-      )
+      .insert(row, { ignoreUnknownValues: true })
       .catch((e) => {
         console.warn(`${e}`);
         if (e.errors) {
