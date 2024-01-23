@@ -117,14 +117,15 @@ s.on("message", (msg, rinfo) => {
   for (const tableName of process.env.TABLE.split(",")) {
     bq.dataset(process.env.DATASET)
       .table(tableName)
-      .insert([
+      .insert(
         {
           log: JSON.stringify(json),
           id: crypto.randomUUID(),
           timestamp: date.getTime(),
           timestamp_ts: bq.timestamp(date),
         },
-      ])
+        { ignoreUnknownValues: true }
+      )
       .catch((e) => {
         console.warn(`${e}`);
         if (e.errors) {
